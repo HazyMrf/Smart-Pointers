@@ -1,26 +1,20 @@
 # IntrusivePtr
 
-Общая информация по задачам на умные указатели [здесь](../readme.md).
-
 ### Что это?
-`IntrusivePtr` -- умный указатель, похожий по семантике на `SharedPtr`, без возможности брать `WeakPtr` на указатель.
-При этом, как вы увидите, реализация данного класса намного проще, чем `SharedPtr`.
-Это достигается за счет ограничения на пользовательский тип. Он должен удовлетворять следующему условию:
-1. Внутри типа находится счетчик ссылок (поэтому указатель интрузивный: счетчик находится прямо в объекте).
-1. Есть метод `IncRef()`, уменьшающий внутренний счетчик ссылок
-1. Есть метод `DecRef()`, уменьшающий внутренний счетчик ссылок; при достижении нуля объект автоматически разрушается.
-1. Есть метод `RefCount()`, возвращающий текущее значения счетчика.
+`IntrusivePtr` is a smart pointer that is similar in semantics to `SharedPtr`,
+but without the ability to create a `WeakPtr` to the pointer. However, as you
+will see, the implementation of this class is much simpler than that of `SharedPtr`.
+This is achieved by restricting the user-defined type to satisfy the following condition:
+1. The user-defined type must have a reference count inside it (hence the name "intrusive" pointer: the reference count is located directly in the object).
+2. There is a method `IncRef()` which increments the internal reference count.
+3. There is a method `DecRef()` which decrements the internal reference count; when the count reaches zero, the object is automatically destroyed.
+4. There is a method `RefCount()` which returns the current value of the reference count.
 
-Важно, что все состояние указателя находится в объекте, на который он указывает. Это позволяет создавать корректный `IntrusivePtr` из сырого указателя, ровно как с `enable_shared_from_this`.
 
-Рядом с `IntrusivePtr` реализован удобный класс-миксин, позволяющий вставить счетчик ссылок в любой объект, просто отнаследовавшись от него:
-```cpp
-class MyClazzWithIntrusiveCounter : public SimpleRefCounted<MyStringWithIntrusiveCounter> {
-    ...
-};
-```
-
-### Зачем это?
-За счет более строгих требований на пользовательский тип, чем у `SharedPtr`, и отсутствия `WeakPtr` `IntrusivePtr` реализуется намного проще и эффективнее.
-Удобная абстракция со внешним счетчиком ссылок позволяет легко использовать `IntrusivePtr` для нетривиальных времен жизни (см. `ObjectPool` в тестах).
-Большую часть использований `std::shared_ptr` в вашем коде на самом деле можно заменить на более легковесный `IntrusivePtr`.
+### Why should we use IntrusivePtr?
+Due to the stricter requirements on the user-defined type compared to `SharedPtr`
+and the absence of `WeakPtr`, `IntrusivePtr` is implemented much simpler and 
+more efficiently. The convenient abstraction with an external reference count 
+makes it easy to use `IntrusivePtr` for non-trivial lifetimes. 
+Most of the uses of std::shared_ptr in your code can actually be replaced with the lighter `IntrusivePtr`.
+You can also check `boost` library for `IntrusivePtr`.
